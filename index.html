@@ -590,8 +590,24 @@
             document.getElementById('g2-grid-box').classList.remove('grid-fever-shake');
             document.getElementById('g2-overlay-rule').classList.add('hidden'); document.getElementById('g2-overlay-over').classList.add('hidden');
             
-            sound(440, 0.15, "sawtooth", 0.08);
-            g2_Spawn();
+            // 嘗試播放音效，若沒檔案也不會卡死網頁
+            try { Audio_G2_Fever.currentTime = 0; Audio_G2_Fever.play().catch(e=>{}); } catch(e){}
+
+            // 啟動計時器
+            g2_clockTimer = setInterval(() => {
+                if(!g2_isPlaying) return; 
+                g2_time = +(g2_time - 0.1).toFixed(1); 
+                if(g2_time <= 0) { 
+                    g2_time = 0; 
+                    g2_EndGame(); 
+                }
+                const timerDisplay = document.getElementById('g2-hud-timer');
+                if(timerDisplay) {
+                    timerDisplay.textContent = g2_time.toFixed(1) + "s";
+                }
+            }, 100);
+
+            g2_Spawn(); 
         }
         function g2_Spawn() {
             if(!g2_isPlaying || g2_isFever) return; 
