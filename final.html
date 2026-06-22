@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁設計學分</title>
+    <style>
+        /* 全網頁極光暗色調與排版 */
+        :root {
+            --bg-main: #090d16;
+            --panel-bg: rgba(21, 32, 54, 0.8);
+            --neon-cyan: #00f0ff;
+            --neon-pink: #ff0055;
+            --neon-gold: #ffaa00;
+            --text-light: #f8fafc;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+            background-color: var(--bg-main);
+            background-image: radial-gradient(circle at center, #131b2e 0%, #090d16 100%);
+            color: var(--text-light);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        /* 分頁隱藏與顯示邏輯 */
+        .page-section {
+            display: none;
+            width: 100%;
+            max-width: 1050px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .page-section.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==========================================
+           1. 主頁面樣式
+           ========================================== */
+        .main-menu-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .menu-title-card {
+            border: 3px solid var(--neon-cyan);
+            border-radius: 20px;
+            padding: 40px 80px;
+            background-color: rgba(5, 10, 20, 0.6);
+            box-shadow: 0 0 35px rgba(0, 240, 255, 0.25), inset 0 0 20px rgba(0, 240, 255, 0.1);
+            text-align: center;
+        }
+
+        .menu-title-card h1 {
+            font-size: 52px;
+            margin: 0;
+            color: var(--text-light);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            letter-spacing: 4px;
+        }
+
+        .menu-btn-row {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .menu-game-btn {
+            background-color: var(--panel-bg);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            padding: 20px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 180px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .menu-game-btn:hover {
+            transform: translateY(-5px);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.3);
+            color: var(--neon-cyan);
+        }
+
+        /* ==========================================
+           共用網頁佈局 (遊戲區 + 控制台)
+           ========================================== */
+        .game-layout-grid {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            width: 100%;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* 遊戲核心畫布/平台 */
+        .stage-box {
+            position: relative;
+            background-color: #020613;
+            border: 2px solid var(--neon-cyan);
+            border-radius: 16px;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+            overflow: hidden;
+        }
+
+        /* 側邊設定面板控制台 */
+        .control-panel {
+            background-color: var(--panel-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            width: 260px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
+
+        .control-panel h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--neon-gold);
+            font-size: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .setting-group {
+            margin-bottom: 16px;
+        }
+
+        .setting-group label {
+            display: block;
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        .setting-group select, .setting-group input[type="range"], .setting-group input[type="color"] {
+            width: 100%;
+            padding: 8px;
+            background: #0b1329;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .val-indicator {
+            text-align: right;
+            font-size: 11px;
+            color: var(--neon-cyan);
+            margin-top: 2px;
+        }
+
+        /* 頂部即時數據 HUD */
+        .hud-line {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .hud-cell span { font-size: 12px; color: var(--text-muted); display:block; text-align:center;}
+        .hud-cell strong { font-size: 18px; color: var(--neon-cyan); display:block; text-align:center;}
+
+        /* 能量條 */
+        .bar-container { width: 100%; height: 6px; background: rgba(255,255,255,0.05); margin-bottom: 15px; border-radius: 3px; overflow:hidden; }
+        .bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-gold)); transition: width 0.1s; }
+
+        /* 覆蓋大面板 (規則說明與結算) */
+        .game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(7, 11, 22, 0.96);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .game-overlay.hidden { display: none !important; }
+
+        .game-overlay h2 { font-size: 28px; color: var(--neon-cyan); margin: 0 0 10px 0; }
+        .game-overlay p { color: #94a3b8; font-size: 14px; line-height: 1.6; max-width: 360px; margin: 0 0 25px 0; }
+        
+        .score-board-summary {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 15px 30px;
+            margin-bottom: 25px;
+            font-size: 15px;
+        }
+        .score-board-summary span { color: var(--neon-pink); font-weight: bold; font-size: 20px; }
+
+        /* 按鈕系統 */
+        .btn-ui {
+            background: linear-gradient(135deg, #00f0ff, #0284c7);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 240, 255, 0.2);
+            transition: all 0.15s ease;
+        }
+        .btn-ui:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--neon-cyan); }
+        
+        .btn-row-layout {
+            display: flex;
+            gap: 15px;
+        }
+        .btn-ui.btn-secondary {
+            background: linear-gradient(135deg, #475569, #1e293b);
+            box-shadow: none;
+        }
+        .btn-ui.btn-secondary:hover { box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
+
+        /* 獨立元素元件 */
+        .g1-target {
+            position: absolute;
+            border-radius: 6px;
+            cursor: pointer;
+            box-sizing: border-box;
+            border: 2px solid white;
+        }
+        
+        /* 遊戲二：網格容器 */
+        .g2-grid-canvas {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            display: grid;
+            gap: 12px;
+        }
+        .g2-cell {
+            background-color: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .g2-cell:hover { background-color: rgba(255, 255, 255, 0.05); }
+        .g2-cell.active-blue { background-color: var(--neon-cyan); box-shadow: 0 0 15px var(--neon-cyan); border-color: #fff; transform: scale(0.96); }
+        .g2-cell.active-red { background-color: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); border-color: #fff; transform: scale(0.96); }
+        .g2-cell.active-gold { background-color: var(--neon-gold); box-shadow: 0 0 20px var(--neon-gold); border-color: #fff; transform: scale(0.96); }
+        .grid-fever-shake { animation: g2shake 0.2s infinite alternate; border-color: var(--neon-gold) !important; }
+        @keyframes g2shake { 0% { transform: translate(1px, 1px); } 100% { transform: translate(-1px, -1px); } }
+
+        canvas { display: block; cursor: none; }
+    </style>
+</head>
+<body>
+
+    <section class="page-section active" id="sec-main-menu">
+        <div class="main-menu-container">
+            <div class="menu-title-card">
+                <h1>滑鼠小遊戲</h1>
+            </div>
+            <div class="menu-btn-row">
+                <button class="menu-game-btn" onclick="switchPage('sec-g1')">反應大王</button>
+                <button class="menu-game-btn" onclick="switchPage('sec-g2')">連擊大王</button>
+                <button class="menu-game-btn" onclick="switchPage('sec-g3')">躲避大王</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section" id="sec-g1">
+        <div class="hud-line">
+            <div class="hud-cell"><span>目前個數</span><strong id="g1-hud-score">0</strong></div>
+            <div class="hud-cell"><span>本次反應時間</span><strong id="g1-hud-now" style="color:var(--neon-pink);">0 ms</strong></div>
+            <div class="hud-cell"><span>平均反應時間</span><strong id="g1-hud-avg">0 ms</strong></div>
+        </div>
+
+        <div class="game-layout-grid">
+            <div class="stage-box" id="g1-stage" style="width: 600px; height: 500px;">
+                <div class="game-overlay" id="g1-overlay-rule">
+                    <h2>反應大王：規則</h2>
+                    <p>畫面上會隨機生成一個指定色方塊，請用最快速度點擊它！</p>
+                    <button class="btn-ui" onclick="g1_StartGame()">開始遊戲</button>
+                </div>
+                <div class="game-overlay hidden" id="g1-overlay-over">
+                    <h2>挑戰時間截止！</h2>
+                    <div class="score-board-summary">
+                        最終得分：<span id="g1-res-score">0</span> 分<br>
+                        平均速度：<span id="g1-res-avg">0</span> ms
+                    </div>
+                    <div class="btn-row-layout">
+                        <button class="btn-ui" onclick="g1_StartGame()">再玩一次</button>
+                        <button class="btn-ui btn-secondary" onclick="switchPage('sec-main-menu')">回到主頁面</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3>設置</h3>
+                <div class="setting-group">
+                    <label for="g1-cfg-color">目標方塊顏色 (點擊自訂)</label>
+                    <input type="color" id="g1-cfg-color" value="#00f0ff" style="height: 40px; cursor: pointer;">
+                </div>
+                <div class="setting-group">
+                    <label for="g1-cfg-size">目標尺寸大小</label>
+                    <input type="range" id="g1-cfg-size" min="25" max="75" value="45">
+                    <div class="val-indicator"><span id="g1-txt-size">45</span> px</div>
+                </div>
+                <div class="setting-group">
+                    <label for="g1-cfg-frequency">生成等待頻率</label>
+                    <input type="range" id="g1-cfg-frequency" min="200" max="2000" step="100" value="500">
+                    <div class="val-indicator"><span id="g1-txt-frequency">0.5</span> 秒</div>
+                </div>
+                <div class="setting-group">
+                    <label for="g1-cfg-total">測試最大總數量</label>
+                    <input type="range" id="g1-cfg-total" min="10" max="40" step="5" value="20">
+                    <div class="val-indicator"><span id="g1-txt-total">20</span> 個</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section" id="sec-g2">
+        <div class="hud-line">
+            <div class="hud-cell"><span>得分 SCORE</span><strong id="g2-hud-score">0</strong></div>
+            <div class="hud-cell"><span>剩餘時間 TIME</span><strong id="g2-hud-timer">30.0s</strong></div>
+            <div class="hud-cell"><span>最高連擊 COMBO</span><strong id="g2-hud-combo">0</strong></div>
+        </div>
+        <div class="bar-container" style="max-width:600px;"><div class="bar-fill" id="g2-fever-bar"></div></div>
+
+        <div class="game-layout-grid">
+            <div class="stage-box" id="g2-stage" style="width: 450px; height: 450px;">
+                <div class="game-overlay" id="g2-overlay-rule">
+                    <h2>連擊大王</h2>
+                    <p>點擊藍色和金色格子，避開紅色格子，當連擊能量條滿時，進入狂暴bonus階段</p>
+                    <button class="btn-ui" onclick="g2_StartGame()">開始遊戲</button>
+                </div>
+                <div class="game-overlay hidden" id="g2-overlay-over">
+                    <h2>矩陣任務完畢</h2>
+                    <div class="score-board-summary">
+                        最終總得分：<span id="g2-res-score">0</span> 分<br>
+                        最大連擊數：<span id="g2-res-combo">0</span> 次
+                    </div>
+                    <div class="btn-row-layout">
+                        <button class="btn-ui" onclick="g2_StartGame()">再玩一次</button>
+                        <button class="btn-ui btn-secondary" onclick="switchPage('sec-main-menu')">回到主頁面</button>
+                    </div>
+                </div>
+                <div class="g2-grid-canvas" id="g2-grid-box"></div>
+            </div>
+
+            <div class="control-panel">
+                <h3>設置</h3>
+                <div class="setting-group">
+                    <label for="g2-cfg-grid-size">矩陣網格大小 (格數)</label>
+                    <select id="g2-cfg-grid-size">
+                        <option value="4" selected>4 x 4</option>
+                        <option value="5">5 x 5</option>
+                        <option value="6">6 x 6</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="g2-cfg-time">戰役總限時時間</label>
+                    <input type="range" id="g2-cfg-time" min="15" max="60" step="5" value="30">
+                    <div class="val-indicator"><span id="g2-txt-time">30</span> 秒</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section" id="sec-g3">
+        <div class="hud-line" style="max-width: 700px;">
+            <div class="hud-cell"><span>生存秒數 TIME</span><strong id="g3-hud-score">0.0s</strong></div>
+            <div class="hud-cell"><span>極限最佳紀錄 BEST</span><strong id="g3-hud-best" style="color:var(--neon-gold);">0.0s</strong></div>
+            <div class="hud-cell"><span>系統等級 LV</span><strong id="g3-hud-level" style="color:var(--neon-pink);">LV.1</strong></div>
+            <div class="hud-cell"><span>目前血量 HP</span><strong id="g3-hud-hp" style="color:#10b981;">3 / 3</strong></div>
+        </div>
+
+        <div class="game-layout-grid">
+            <div class="stage-box" id="g3-stage-wrapper" style="width: 700px; height: 600px;">
+                <div class="game-overlay" id="g3-overlay-rule">
+                    <h2>躲避大王：規則</h2>
+                    <p>子彈會從四面八方射來，用滑鼠移動來躲避</p>
+                    <button class="btn-ui" onclick="g3_StartGame()">開始遊戲</button>
+                </div>
+                <div class="game-overlay hidden" id="g3-overlay-over">
+                    <h2>遊戲結束</h2>
+                    <div class="score-board-summary">
+                        生存時間：<span id="g3-res-score">0.0</span> 秒
+                    </div>
+                    <div class="btn-row-layout">
+                        <button class="btn-ui" onclick="g3_StartGame()">再玩一次</button>
+                        <button class="btn-ui btn-secondary" onclick="switchPage('sec-main-menu')">回到主頁面</button>
+                    </div>
+                </div>
+                <canvas id="g3-canvas"></canvas>
+            </div>
+
+            <div class="control-panel">
+                <h3>設置</h3>
+                <div class="setting-group">
+                    <label for="g3-cfg-hp">初始生命血量</label>
+                    <select id="g3-cfg-hp">
+                        <option value="1">1 🚀 極限一擊死</option>
+                        <option value="3" selected>3 🛡️ 標準模式</option>
+                        <option value="5">5 🔋 厚實裝甲</option>
+                        <option value="10">10 💎 終極新手艙</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="g3-cfg-levelup-time">等級提升速度</label>
+                    <select id="g3-cfg-levelup-time">
+                        <option value="3">3 秒 (極速變態)</option>
+                        <option value="6" selected>6 秒 (預設標準)</option>
+                        <option value="10">10 秒 (慢速溫和)</option>
+                        <option value="15">15 秒 (漫長悠閒)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="g3-cfg-color">方塊顏色 (點擊自訂)</label>
+                    <input type="color" id="g3-cfg-color" value="#00f0ff" style="height: 40px; cursor: pointer;">
+                </div>
+                <div class="setting-group">
+                    <label for="g3-cfg-size">方塊尺寸</label>
+                    <input type="range" id="g3-cfg-size" min="16" max="36" step="4" value="24">
+                    <div class="val-indicator"><span id="g3-txt-size">24</span> px</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // 載入使用者指定的五個自訂實體音效檔案
+        const MyAudio_Bomb = new Audio("bomb.m4a");
+        const MyAudio_Hurt = new Audio("hurt.m4a");
+        const MyAudio_GameOver_G3 = new Audio("gameover_g3.m4a");
+        const MyAudio_GameOver_G1 = new Audio("gameover_g1.mp3");
+        const MyAudio_GameOver_G2 = new Audio("gameover_g2.mp3");
+
+        // 原生電子音引擎（補足剩餘沒替換的系統反饋音）
+        let actx = null;
+        function sound(f, d, t="sine", v=0.1) {
+            try {
+                if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+                let osc = actx.createOscillator(), gain = actx.createGain();
+                osc.type = t; osc.frequency.value = f; gain.gain.setValueAtTime(v, actx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.00001, actx.currentTime + d);
+                osc.connect(gain); gain.connect(actx.destination); osc.start(); osc.stop(actx.currentTime + d);
+            } catch(e) {}
+        }
+
+        function switchPage(pageId) {
+            g1_Kill(); g2_Kill(); g3_Kill();
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            if(pageId === 'sec-g3') { g3_ResizeInit(); }
+            if(pageId === 'sec-g2') { g2_BuildGridDOM(); } 
+        }
+
+        /* --- 遊戲一引擎 --- */
+        let g1_score=0, g1_clicks=0, g1_totalTime=0, g1_spawnStamp=0, g1_isPlaying=false, g1_loopTimer=null;
+        document.getElementById('g1-cfg-size').addEventListener('input', (e)=> document.getElementById('g1-txt-size').textContent = e.target.value);
+        document.getElementById('g1-cfg-frequency').addEventListener('input', (e)=> document.getElementById('g1-txt-frequency').textContent = (e.target.value/1000).toFixed(1));
+        document.getElementById('g1-cfg-total').addEventListener('input', (e)=> document.getElementById('g1-txt-total').textContent = e.target.value);
+
+        function g1_StartGame() {
+            g1_Kill();
+            g1_score = 0; g1_clicks = 0; g1_totalTime = 0; g1_isPlaying = true;
+            document.getElementById('g1-hud-score').textContent = "0";
+            document.getElementById('g1-hud-now').textContent = "0 ms";
+            document.getElementById('g1-hud-avg').textContent = "0 ms";
+            document.getElementById('g1-overlay-rule').classList.add('hidden');
+            document.getElementById('g1-overlay-over').classList.add('hidden');
+            
+            sound(600, 0.1, "sine", 0.15);
+            g1_Spawn();
+        }
+
+        function g1_Spawn() {
+            if(!g1_isPlaying) return;
+            const targetOld = document.querySelector('.g1-target'); if(targetOld) targetOld.remove();
+            const maxLimit = parseInt(document.getElementById('g1-cfg-total').value);
+            if(g1_clicks >= maxLimit) { g1_EndGame(); return; }
+
+            const size = parseInt(document.getElementById('g1-cfg-size').value);
+            const color = document.getElementById('g1-cfg-color').value;
+            const stage = document.getElementById('g1-stage');
+
+            const t = document.createElement('div');
+            t.classList.add('g1-target');
+            t.style.width = size + "px"; t.style.height = size + "px";
+            t.style.backgroundColor = color; t.style.boxShadow = `0 0 15px ${color}`;
+
+            const rx = Math.max(10, Math.floor(Math.random() * (600 - size - 20)));
+            const ry = Math.max(10, Math.floor(Math.random() * (500 - size - 20)));
+            t.style.left = rx + "px"; t.style.top = ry + "px";
+
+            t.addEventListener('mousedown', (e) => {
+                e.stopPropagation(); if(!g1_isPlaying) return;
+                g1_clicks++; const ms = Date.now() - g1_spawnStamp; g1_score++; g1_totalTime += ms;
+                document.getElementById('g1-hud-score').textContent = g1_score;
+                document.getElementById('g1-hud-now').textContent = ms + " ms";
+                document.getElementById('g1-hud-avg').textContent = Math.round(g1_totalTime / g1_clicks) + " ms";
+                
+                sound(800, 0.08, "triangle", 0.12);
+                t.remove();
+                g1_loopTimer = setTimeout(g1_Spawn, parseInt(document.getElementById('g1-cfg-frequency').value));
+            });
+            stage.appendChild(t); g1_spawnStamp = Date.now();
+        }
+        function g1_EndGame() {
+            g1_isPlaying = false;
+            document.getElementById('g1-res-score').textContent = g1_score;
+            document.getElementById('g1-res-avg').textContent = g1_clicks > 0 ? Math.round(g1_totalTime / g1_clicks) : 0;
+            document.getElementById('g1-overlay-over').classList.remove('hidden'); 
+            
+            MyAudio_GameOver_G1.currentTime = 0; MyAudio_GameOver_G1.play().catch(e=>{});
+        }
+        function g1_Kill() { g1_isPlaying = false; clearTimeout(g1_loopTimer); const t = document.querySelector('.g1-target'); if(t) t.remove(); }
+
+        /* --- 遊戲二引擎 --- */
+        let g2_score=0, g2_combo=0, g2_maxCombo=0, g2_time=30, g2_isPlaying=false, g2_isFever=false, g2_gridCount=4;
+        let g2_clockTimer=null, g2_spawnTimer=null, g2_feverEndTimer=null;
+        
+        document.getElementById('g2-cfg-time').addEventListener('input', (e)=> document.getElementById('g2-txt-time').textContent = e.target.value);
+        document.getElementById('g2-cfg-grid-size').addEventListener('change', (e) => { 
+            g2_gridCount = parseInt(e.target.value); g2_BuildGridDOM(); 
+        });
+
+        function g2_BuildGridDOM() {
+            const gridBox = document.getElementById('g2-grid-box');
+            gridBox.innerHTML = ''; 
+            gridBox.style.gridTemplateColumns = `repeat(${g2_gridCount}, 1fr)`;
+            gridBox.style.gridTemplateRows = `repeat(${g2_gridCount}, 1fr)`;
+            const totalCount = g2_gridCount * g2_gridCount;
+            for(let i = 0; i < totalCount; i++) {
+                const cell = document.createElement('div'); cell.classList.add('g2-cell');
+                cell.setAttribute('data-idx', i); cell.addEventListener('mousedown', () => { g2_HandleCellClick(cell); });
+                gridBox.appendChild(cell);
+            }
+        }
+
+        function g2_StartGame() {
+            g2_Kill(); g2_score = 0; g2_combo = 0; g2_maxCombo = 0; g2_isFever = false;
+            g2_time = parseInt(document.getElementById('g2-cfg-time').value); g2_isPlaying = true;
+            g2_BuildGridDOM(); 
+            document.getElementById('g2-hud-score').textContent = "0"; document.getElementById('g2-hud-combo').textContent = "0";
+            document.getElementById('g2-hud-timer').textContent = g2_time.toFixed(1) + "s"; document.getElementById('g2-fever-bar').style.width = "0%";
+            document.getElementById('g2-grid-box').classList.remove('grid-fever-shake');
+            document.getElementById('g2-overlay-rule').classList.add('hidden'); document.getElementById('g2-overlay-over').classList.add('hidden');
+            
+            sound(440, 0.15, "sawtooth", 0.08);
+            g2_Spawn();
+        }
+        function g2_Spawn() {
+            if(!g2_isPlaying || g2_isFever) return; 
+            const currentCells = document.querySelectorAll('.g2-cell'); currentCells.forEach(c => c.className = 'g2-cell');
+            const rand = Math.random(); const idx = Math.floor(Math.random() * (g2_gridCount * g2_gridCount));
+            if(rand < 0.7) currentCells[idx].classList.add('active-blue');
+            else if(rand < 0.9) currentCells[idx].classList.add('active-red');
+            else currentCells[idx].classList.add('active-gold');
+            g2_spawnTimer = setTimeout(g2_Spawn, Math.max(300, 800 - (g2_score*4)));
+        }
+        function g2_FeverOn() {
+            g2_isFever = true; clearTimeout(g2_spawnTimer); document.getElementById('g2-grid-box').classList.add('grid-fever-shake');
+            const currentCells = document.querySelectorAll('.g2-cell'); currentCells.forEach(c => c.className = 'g2-cell active-fever active-gold');
+            
+            sound(880, 0.3, "sawtooth", 0.1);
+            g2_feverEndTimer = setTimeout(() => {
+                g2_isFever = false; document.getElementById('g2-fever-bar').style.width = "0%";
+                document.getElementById('g2-grid-box').classList.remove('grid-fever-shake'); 
+                const endCells = document.querySelectorAll('.g2-cell'); endCells.forEach(c => c.className = 'g2-cell'); g2_Spawn();
+            }, 3500);
+        }
+        function g2_HandleCellClick(c) {
+            if(!g2_isPlaying) return;
+            if(g2_isFever) {
+                g2_score += 2; g2_combo++; if(g2_combo > g2_maxCombo) g2_maxCombo = g2_combo;
+                sound(950, 0.05, "sine", 0.1);
+                c.className = 'g2-cell'; setTimeout(()=>{if(g2_isFever) c.className='g2-cell active-gold';},40);
+            } else {
+                if(c.classList.contains('active-blue')) {
+                    g2_score += 1; g2_combo++; if(g2_combo > g2_maxCombo) g2_maxCombo = g2_combo;
+                    let pct = Math.min(100, (g2_combo * 6)); document.getElementById('g2-fever-bar').style.width = pct + "%";
+                    sound(750, 0.06, "sine", 0.1);
+                    c.className = 'g2-cell'; clearTimeout(g2_spawnTimer); g2_Spawn(); if(pct >= 100) g2_FeverOn();
+                } else if(c.classList.contains('active-gold')) {
+                    g2_score += 3; g2_combo++; if(g2_combo > g2_maxCombo) g2_maxCombo = g2_combo;
+                    sound(1100, 0.08, "sine", 0.12);
+                    c.className = 'g2-cell'; clearTimeout(g2_spawnTimer); g2_Spawn();
+                } else if(c.classList.contains('active-red')) {
+                    g2_combo = 0; g2_score = Math.max(0, g2_score - 2); document.getElementById('g2-fever-bar').style.width = "0%";
+                    
+                    MyAudio_Bomb.currentTime = 0; MyAudio_Bomb.play().catch(e=>{});
+                    c.className = 'g2-cell'; clearTimeout(g2_spawnTimer); g2_Spawn();
+                } else { g2_combo = 0; }
+            }
+            document.getElementById('g2-hud-score').textContent = g2_score; document.getElementById('g2-hud-combo').textContent = g2_combo;
+        }
+        function g2_EndGame() {
+            g2_isPlaying = false; g2_Kill(); document.getElementById('g2-res-score').textContent = g2_score;
+            document.getElementById('g2-res-combo').textContent = g2_maxCombo; document.getElementById('g2-overlay-over').classList.remove('hidden'); 
+            
+            MyAudio_GameOver_G2.currentTime = 0; MyAudio_GameOver_G2.play().catch(e=>{});
+        }
+        function g2_Kill() { g2_isPlaying = false; clearInterval(g2_clockTimer); clearTimeout(g2_spawnTimer); clearTimeout(g2_feverEndTimer); }
+
+        /* --- 遊戲三引擎 --- */
+        const canvas = document.getElementById('g3-canvas'); const ctx = canvas.getContext('2d');
+        let g3_isPlaying = false, g3_score = 0, g3_best = parseFloat(localStorage.getItem('g3_b'))||0, g3_lv = 1, g3_stamp = 0, g3_lastSpawn = 0, g3_lastLaser = 0;
+        let p_x = 350, p_y = 300, p_tx = 350, p_ty = 300, g3_bList = [], g3_lList = [];
+        
+        let g3_maxHp = 3, g3_currentHp = 3, g3_invincibleTimer = 0; 
+
+        document.getElementById('g3-cfg-size').addEventListener('input', (e)=> document.getElementById('g3-txt-size').textContent = e.target.value);
+        function g3_ResizeInit() { canvas.width = 700; canvas.height = 600; }
+        function updateG3Mouse(cx, cy) {
+            const rect = canvas.getBoundingClientRect(); const size = parseInt(document.getElementById('g3-cfg-size').value);
+            let mx = (cx - rect.left) * (700 / rect.width); let my = (cy - rect.top) * (600 / rect.height);
+            p_tx = Math.max(size/2, Math.min(700 - size/2, mx)); p_ty = Math.max(size/2, Math.min(600 - size/2, my));
+        }
+        document.getElementById('g3-stage-wrapper').addEventListener('mousemove', (e)=> updateG3Mouse(e.clientX, e.clientY));
+
+        function g3_StartGame() {
+            g3_isPlaying = true; g3_score = 0; g3_lv = 1; g3_bList = []; g3_lList = []; p_x = 350; p_y = 300; p_tx = 350; p_ty = 300;
+            g3_stamp = Date.now(); g3_lastSpawn = Date.now(); g3_lastLaser = Date.now();
+            
+            g3_maxHp = parseInt(document.getElementById('g3-cfg-hp').value);
+            g3_currentHp = g3_maxHp; g3_invincibleTimer = 0;
+
+            document.getElementById('g3-hud-hp').textContent = `${g3_currentHp} / ${g3_maxHp}`;
+            document.getElementById('g3-hud-hp').style.color = "#10b981";
+            document.getElementById('g3-overlay-rule').classList.add('hidden'); document.getElementById('g3-overlay-over').classList.add('hidden'); 
+            g3_Loop();
+        }
+
+        function g3_PlayerHit() {
+            if(g3_invincibleTimer > 0) return; 
+
+            g3_currentHp--;
+            document.getElementById('g3-hud-hp').textContent = `${g3_currentHp} / ${g3_maxHp}`;
+
+            if(g3_currentHp <= g3_maxHp / 3) {
+                document.getElementById('g3-hud-hp').style.color = "var(--neon-pink)";
+            } else if(g3_currentHp <= g3_maxHp / 2) {
+                document.getElementById('g3-hud-hp').style.color = "var(--neon-gold)";
+            }
+
+            if(g3_currentHp <= 0) {
+                g3_GameOver();
+            } else {
+                g3_invincibleTimer = 60; // 1 秒無敵
+                MyAudio_Hurt.currentTime = 0; MyAudio_Hurt.play().catch(e=>{});
+            }
+        }
+
+        function g3_Loop() {
+            if(!g3_isPlaying) return; ctx.clearRect(0,0,700,600); g3_score = (Date.now() - g3_stamp) / 1000;
+            document.getElementById('g3-hud-score').textContent = g3_score.toFixed(1) + "s"; 
+            
+            const levelUpInterval = parseFloat(document.getElementById('g3-cfg-levelup-time').value);
+            g3_lv = Math.min(10, Math.floor(g3_score / levelUpInterval) + 1);
+            document.getElementById('g3-hud-level').textContent = "LV." + g3_lv; 
+            
+            p_x += (p_tx - p_x) * 0.35; p_y += (p_ty - p_y) * 0.35;
+            if(g3_invincibleTimer > 0) g3_invincibleTimer--;
+
+            const now = Date.now();
+            
+            if(now - g3_lastSpawn > Math.max(160, 400 - (g3_lv * 28))) {
+                g3_lastSpawn = now; let side = Math.floor(Math.random()*4), sx, sy;
+                if(side===0){ sx=Math.random()*700; sy=-10;} else if(side===1){ sx=Math.random()*700; sy=610;}
+                else if(side===2){ sx=-10; sy=Math.random()*600;} else { sx=710; sy=Math.random()*600;}
+                let dx = p_x - sx, dy = p_y - sy, d = Math.sqrt(dx*dx+dy*dy); 
+                
+                let spd = Math.min(7.5, 1.6 + (g3_lv * 0.45));
+                let typeRand = Math.random();
+                if (g3_lv >= 2 && typeRand < 0.35) {
+                    g3_bList.push({ x:sx, y:sy, vx:(dx/d)*spd, vy:(dy/d)*spd, r:5.5, color:"#00f0ff", type:"wave", angle:0 });
+                } else {
+                    g3_bList.push({ x:sx, y:sy, vx:(dx/d)*spd, vy:(dy/d)*spd, r:4.5, color:"#ff0055", type:"tracking" });
+                }
+            }
+
+            if(g3_lv >= 2 && now - g3_lastLaser > Math.max(3500, 8000 - (g3_lv * 600))) {
+                g3_lastLaser = now;
+                let isVert = Math.random() < 0.5;
+                g3_lList.push({
+                    isVertical: isVert, position: Math.random() * (isVert ? 600 : 500) + 50,
+                    width: 0, timer: 0, warningLimit: 80, activeLimit: 40, isDamaging: false
+                });
+                sound(220, 0.3, "sawtooth", 0.05);
+            }
+
+            for(let i=g3_lList.length-1; i>=0; i--) {
+                let l = g3_lList[i]; l.timer++;
+                if(l.timer > l.warningLimit) {
+                    l.isDamaging = true; let life = l.timer - l.warningLimit;
+                    l.width = life < 10 ? (life/10)*35 : (life > l.activeLimit - 15 ? ((l.activeLimit-life)/15)*35 : 35);
+                }
+                ctx.save();
+                if(!l.isDamaging) {
+                    ctx.strokeStyle = "rgba(255, 120, 0, 0.45)"; ctx.lineWidth = 2; ctx.setLineDash([10, 10]); ctx.beginPath();
+                    if(l.isVertical) { ctx.fillRect(l.position - 17.5, 0, 35, 600); ctx.moveTo(l.position, 0); ctx.lineTo(l.position, 600); }
+                    else { ctx.fillRect(0, l.position - 17.5, 700, 35); ctx.moveTo(0, l.position); ctx.lineTo(700, l.position); }
+                    ctx.stroke();
+                } else if(l.width > 0) {
+                    ctx.fillStyle = "#ffdd99"; ctx.shadowColor = "#ff6600"; ctx.shadowBlur = 15; ctx.beginPath();
+                    if(l.isVertical) { ctx.fillRect(l.position - l.width/2, 0, l.width, 600); ctx.fillStyle = "#fff"; ctx.fillRect(l.position - l.width/4, 0, l.width/2, 600); }
+                    else { ctx.fillRect(0, l.position - l.width/2, 700, l.width); ctx.fillStyle = "#fff"; ctx.fillRect(0, l.position - l.width/4, 700, l.width/2); }
+                }
+                ctx.restore();
+
+                if(l.isDamaging && l.width > 0) {
+                    let hit = l.isVertical ? (Math.abs(p_x - l.position) < (l.width/2 + 4)) : (Math.abs(p_y - l.position) < (l.width/2 + 4));
+                    if(hit) { g3_PlayerHit(); if(g3_currentHp <= 0) return; }
+                }
+                if(l.timer >= (l.warningLimit + l.activeLimit)) g3_lList.splice(i,1);
+            }
+
+            for(let i=g3_bList.length-1; i>=0; i--) {
+                let b = g3_bList[i];
+                if(b.type === "wave") {
+                    b.angle += 0.12;
+                    let nx = -b.vy, ny = b.vx, nl = Math.sqrt(nx*nx+ny*ny);
+                    b.x += b.vx + (nx/nl) * Math.sin(b.angle) * 3.2; b.y += b.vy + (ny/nl) * Math.sin(b.angle) * 3.2;
+                } else { b.x += b.vx; b.y += b.vy; }
+
+                ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = b.color; ctx.fillStyle = b.color;
+                ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+
+                let kx = p_x - b.x, ky = p_y - b.y, kd = Math.sqrt(kx*kx+ky*ky); 
+                if(kd < (4 + b.r)) { g3_PlayerHit(); if(g3_currentHp <= 0) return; }
+                if(b.x<-40||b.x>740||b.y<-40||b.y>640) g3_bList.splice(i,1);
+            }
+
+            if(g3_invincibleTimer == 0 || g3_invincibleTimer % 4 < 2) {
+                let pSize = parseInt(document.getElementById('g3-cfg-size').value); let pColor = document.getElementById('g3-cfg-color').value;
+                ctx.save(); ctx.shadowColor = pColor; ctx.shadowBlur = 10; ctx.strokeStyle = pColor; ctx.lineWidth = 2.5;
+                ctx.strokeRect(p_x - pSize/2, p_y - pSize/2, pSize, pSize); ctx.restore();
+
+                ctx.save(); ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff"; ctx.beginPath();
+                ctx.arc(p_x, p_y, 4, 0, Math.PI*2); ctx.fill(); ctx.restore();
+            }
+
+            requestAnimationFrame(g3_Loop);
+        }
+
+        function g3_GameOver() {
+            g3_isPlaying = false; 
+            if(g3_score > g3_best) { g3_best = g3_score; localStorage.setItem('g3_b', g3_best); }
+            document.getElementById('g3-hud-best').textContent = g3_best.toFixed(1) + "s"; document.getElementById('g3-res-score').textContent = g3_score.toFixed(1);
+            document.getElementById('g3-overlay-over').classList.remove('hidden');
+            
+            // 播放第三關結束專屬自訂音效
+            MyAudio_GameOver_G3.currentTime = 0; MyAudio_GameOver_G3.play().catch(e=>{});
+        }
+        function g3_Kill() { g3_isPlaying = false; }
+    </script>
+</body>
+</html>
